@@ -1,0 +1,1520 @@
+{\rtf1\ansi\ansicpg950\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 <!DOCTYPE html>\
+<html lang="zh-TW">\
+<head>\
+    <meta charset="UTF-8">\
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">\
+    <title>\uc0\u24291 \u21578 \u36913 \u22577 \u33258 \u21205 \u29983 \u25104 \u22120  PRO (AI Enhanced + Benchmark)</title>\
+    \
+    <!-- React & ReactDOM (\uc0\u20351 \u29992 \u31337 \u23450 \u29256 \u26412 ) -->\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>\
+    \
+    <!-- Prop Types (Recharts \uc0\u30340 \u24517 \u35201 \u20381 \u36084 ) -->\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prop-types/15.8.1/prop-types.min.js"></script>\
+    \
+    <!-- Recharts (\uc0\u20351 \u29992 \u31337 \u23450 \u29256 \u26412  2.10.3) -->\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/recharts/2.10.3/Recharts.min.js"></script>\
+    \
+    <!-- Babel -->\
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>\
+    \
+    <!-- Tailwind CSS -->\
+    <script src="https://cdn.tailwindcss.com"></script>\
+\
+    <!-- Markdown Parser (marked) for Chat bubbles -->\
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>\
+\
+    <style>\
+        .scrollbar-hide::-webkit-scrollbar \{ display: none; \}\
+        .scrollbar-hide \{ -ms-overflow-style: none; scrollbar-width: none; \}\
+        body \{ background-color: #f8fafc; \}\
+        /* \uc0\u22294 \u34920  tooltip \u27171 \u24335 \u20462 \u27491  */\
+        .recharts-default-tooltip \{\
+            border-radius: 8px !important;\
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1) !important;\
+            border: none !important;\
+        \}\
+        @keyframes shine \{\
+            0% \{ background-position: 0% 50%; \}\
+            50% \{ background-position: 100% 50%; \}\
+            100% \{ background-position: 0% 50%; \}\
+        \}\
+        .ai-btn-gradient \{\
+            background: linear-gradient(90deg, #4f46e5, #8b5cf6, #ec4899);\
+            background-size: 200% 200%;\
+            animation: shine 3s ease infinite;\
+        \}\
+        @keyframes highlight-pulse \{\
+            0% \{ box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7); \}\
+            70% \{ box-shadow: 0 0 0 10px rgba(147, 51, 234, 0); \}\
+            100% \{ box-shadow: 0 0 0 0 rgba(147, 51, 234, 0); \}\
+        \}\
+        .highlight-box \{\
+            animation: highlight-pulse 1.5s infinite;\
+        \}\
+        .prose p \{ margin-bottom: 0.5em; \}\
+        .prose ul \{ list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.5em; \}\
+        .prose li \{ margin-bottom: 0.2em; \}\
+        .prose strong \{ font-weight: 700; color: #1e293b; \}\
+        \
+        /* Modal \uc0\u21205 \u30059  */\
+        .modal-enter \{ opacity: 0; transform: scale(0.95); \}\
+        .modal-enter-active \{ opacity: 1; transform: scale(1); transition: all 200ms; \}\
+        .modal-exit \{ opacity: 1; transform: scale(1); \}\
+        .modal-exit-active \{ opacity: 0; transform: scale(0.95); transition: all 200ms; \}\
+    </style>\
+</head>\
+<body>\
+    <div id="root"></div>\
+\
+    <script type="text/babel">\
+        const \{ useState, useEffect, useMemo, useRef \} = React;\
+        \
+        // --- Gemini API \uc0\u35373 \u23450  ---\
+        const apiKey = ""; // \uc0\u31995 \u32113 \u26371 \u33258 \u21205 \u22635 \u20837  API Key\
+\
+        // --- 0. \uc0\u20844 \u21496 \u20839 \u37096  Benchmark \u25976 \u25818 \u24235  (\u38928 \u36617 \u20837 ) ---\
+        const DEFAULT_BENCHMARKS = \{\
+            "meta": \{\
+                "platform": "Facebook/Instagram",\
+                "ctr_avg": "1.0% ~ 1.5% (FB), 0.5% ~ 0.6% (IG)",\
+                "cpc_avg": "$6 ~ $10 (FB), $8 ~ $12 (IG)",\
+                "cpm_avg": "$100 ~ $150",\
+                "note": "\uc0\u20114 \u21205 \u30446 \u27161 \u22522 \u28310 \u12290 \u33509 \u26159 \u23566 \u36092 /\u36681 \u25563 \u30446 \u27161 \u65292 CPA \u27874 \u21205 \u36611 \u22823 \u12290 "\
+            \},\
+            "google_display": \{\
+                "platform": "Google GDN",\
+                "ctr_avg": "0.8% ~ 1.5%",\
+                "cpc_avg": "$6 ~ $12",\
+                "cpm_avg": "$40 ~ $60",\
+                "note": "GDN \uc0\u40670 \u25802 \u30446 \u27161 \u22522 \u28310 \u12290 "\
+            \},\
+            "google_video": \{\
+                "platform": "YouTube",\
+                "ctr_avg": "0.5% ~ 2.0% (In-feed)",\
+                "cpv_avg": "$2.0 ~ $2.5",\
+                "note": "\uc0\u24433 \u29255 \u35264 \u30475 \u30446 \u27161 \u12290 "\
+            \},\
+            "line": \{\
+                "platform": "LINE Ads",\
+                "ctr_avg": "0.3% ~ 0.35%",\
+                "cpc_avg": "$6 ~ $8",\
+                "cpm_avg": "$50 ~ $70",\
+                "note": "LINE LAP \uc0\u40670 \u25802 \u30446 \u27161 \u22522 \u28310 \u12290 "\
+            \},\
+            "dsp": \{\
+                "platform": "DSP (General)",\
+                "ctr_avg": "0.2% ~ 0.5%",\
+                "cpc_avg": "$10 ~ $20",\
+                "cpm_avg": "$100 ~ $150",\
+                "note": "\uc0\u22294 \u29255 \u32879 \u25773 \u32178 \u22522 \u28310 \u12290 "\
+            \},\
+            "other": \{\
+                "platform": "General Digital Ads",\
+                "ctr_avg": "1.0%",\
+                "note": "\uc0\u36890 \u29992 \u38928 \u35373 \u20540 "\
+            \}\
+        \};\
+\
+        // --- 1. \uc0\u22522 \u30990  UI \u20803 \u20214  ---\
+        const Card = (\{ children, className = "" \}) => (\
+            <div className=\{`bg-white rounded-xl shadow-sm border border-slate-200 $\{className\}`\}>\
+                \{children\}\
+            </div>\
+        );\
+\
+        const Button = (\{ onClick, children, variant = 'primary', disabled = false, className = '' \}) => \{\
+            const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all flex items-center justify-center gap-2";\
+            const variants = \{\
+                primary: "bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 shadow-sm",\
+                secondary: "bg-slate-100 text-slate-700 hover:bg-slate-200 disabled:bg-slate-50",\
+                outline: "border border-slate-300 text-slate-700 hover:bg-slate-50",\
+                ghost: "text-slate-600 hover:bg-slate-100",\
+                ai: "ai-btn-gradient text-white shadow-lg shadow-purple-500/30 border-none hover:shadow-purple-500/50"\
+            \};\
+            return (\
+                <button onClick=\{onClick\} disabled=\{disabled\} className=\{`$\{baseStyle\} $\{variants[variant]\} $\{className\}`\}>\
+                    \{children\}\
+                </button>\
+            );\
+        \};\
+\
+        // --- 2. \uc0\u22294 \u31034 \u32068 \u20214  ---\
+        const IconBase = (\{ children, size = 24, className = "" \}) => (\
+            <svg xmlns="http://www.w3.org/2000/svg" width=\{size\} height=\{size\} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className=\{className\}>\{children\}</svg>\
+        );\
+        const TrendingUp = (props) => <IconBase \{...props\}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></IconBase>;\
+        const Layers = (props) => <IconBase \{...props\}><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></IconBase>;\
+        const X = (props) => <IconBase \{...props\}><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></IconBase>;\
+        const Plus = (props) => <IconBase \{...props\}><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></IconBase>;\
+        const Check = (props) => <IconBase \{...props\}><polyline points="20 6 9 17 4 12"></polyline></IconBase>;\
+        const FileText = (props) => <IconBase \{...props\}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></IconBase>;\
+        const BarChart2 = (props) => <IconBase \{...props\}><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></IconBase>;\
+        const Lightbulb = (props) => <IconBase \{...props\}><line x1="9" y1="18" x2="15" y2="18"></line><line x1="10" y1="22" x2="14" y2="22"></line><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 9.5 6 4.65 4.65 0 0 0 8 11.5c.25.65.7 1.28 1.41 2.5"></path></IconBase>;\
+        const Copy = (props) => <IconBase \{...props\}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></IconBase>;\
+        const PieChartIcon = (props) => <IconBase \{...props\}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></IconBase>;\
+        const Zap = (props) => <IconBase \{...props\}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></IconBase>;\
+        const Sparkles = (props) => <IconBase \{...props\}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></IconBase>;\
+        const MessageSquare = (props) => <IconBase \{...props\}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></IconBase>;\
+        const Send = (props) => <IconBase \{...props\}><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></IconBase>;\
+        const Settings = (props) => <IconBase \{...props\}><path d="M12.22 2h-.44a2 2 0 0 1-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path><circle cx="12" cy="12" r="3"></circle></IconBase>;\
+        const Key = (props) => <IconBase \{...props\}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></IconBase>;\
+        const ExternalLink = (props) => <IconBase \{...props\}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></IconBase>;\
+        const LogIn = (props) => <IconBase \{...props\}><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><polyline points="10 17 15 12 10 7"></polyline><line x1="15" y1="12" x2="3" y2="12"></line></IconBase>;\
+\
+        // --- 3. \uc0\u20840 \u22495 \u36628 \u21161 \u20989 \u24335  (\u35299 \u26512  CSV \u37007 \u36655 ) ---\
+        const isValidDate = (d) => d instanceof Date && !isNaN(d);\
+\
+        const parseDate = (dateStr) => \{\
+            if (!dateStr) return null;\
+            const d = new Date(dateStr.replace(/-/g, '/'));\
+            return isValidDate(d) ? d : null;\
+        \};\
+\
+        const cleanNumber = (val) => \{\
+            if (!val) return 0;\
+            const clean = String(val).replace(/[^\\d.-]/g, '');\
+            const num = parseFloat(clean);\
+            return isNaN(num) ? 0 : num;\
+        \};\
+\
+        const calculateGrowth = (current, previous) => \{\
+            if (!previous || previous === 0) return 0;\
+            return ((current - previous) / previous) * 100;\
+        \};\
+\
+        const getValue = (row, keywords, excludeID = false) => \{\
+            const keys = Object.keys(row);\
+            let foundKey = keys.find(key => \
+                keywords.some(kw => key.toLowerCase() === kw.toLowerCase())\
+            );\
+            if (!foundKey) \{\
+                foundKey = keys.find(key => \
+                    keywords.some(kw => key.toLowerCase().includes(kw.toLowerCase()))\
+                );\
+            \}\
+            if (foundKey && excludeID) \{\
+                if (foundKey.toLowerCase().includes('id') && !keywords.some(k => k.toLowerCase().includes('id'))) \{\
+                    return "0";\
+                \}\
+            \}\
+            if (!foundKey) return "0";\
+            return row[foundKey];\
+        \};\
+\
+        const getAllTextValues = (row, keywords) => \{\
+            const keys = Object.keys(row);\
+            const matchedKeys = keys.filter(key => \
+                keywords.some(kw => key.toLowerCase().includes(kw.toLowerCase()))\
+            );\
+            const validKeys = matchedKeys.filter(key => !key.toLowerCase().includes('id'));\
+            return validKeys.map(key => row[key]).join(' ');\
+        \};\
+\
+        const parseCSV = (text) => \{\
+            const cleanText = text.replace(/^\\uFEFF/, ''); \
+            const lines = cleanText.split(/\\r\\n|\\n|\\r/).filter(line => line.trim() !== '');\
+            if (lines.length < 2) return [];\
+\
+            const signatureKeywords = [\
+                'campaign', 'ad group', 'keyword', 'search keyword', 'status', \
+                'currency', 'impr', 'clicks', 'cost', 'ctr', 'date', 'day',\
+                '\uc0\u34892 \u37559 \u27963 \u21205 ', '\u24291 \u21578 \u32676 \u32068 ', '\u38364 \u37749 \u23383 ', '\u25628 \u23563 \u38364 \u37749 \u23383 ', '\u29376 \u24907 ', \
+                '\uc0\u24163 \u21029 ', '\u26333 \u20809 ', '\u40670 \u25802 ', '\u36027 \u29992 ', '\u33457 \u36027 ', '\u26085 \u26399 ', \
+                'headline', 'description', '\uc0\u27161 \u38988 ', '\u35498 \u26126 '\
+            ];\
+            \
+            let bestHeaderIndex = 0;\
+            let maxMatches = 0;\
+            \
+            for (let i = 0; i < Math.min(lines.length, 20); i++) \{\
+                const lineLower = lines[i].toLowerCase();\
+                let matches = 0;\
+                signatureKeywords.forEach(kw => \{\
+                    if (lineLower.includes(kw)) matches++;\
+                \});\
+                if (matches > maxMatches && matches >= 2) \{\
+                    maxMatches = matches;\
+                    bestHeaderIndex = i;\
+                \}\
+            \}\
+\
+            const regex = /,(?=(?:(?:[^"]*")\{2\})*[^"]*$)/;\
+            const headers = lines[bestHeaderIndex].split(regex).map(h => \
+                h.trim().replace(/^"|"$/g, '').replace(/\\s+/g, ' ') \
+            );\
+            \
+            const rawData = lines.slice(bestHeaderIndex + 1).map(line => \{\
+                const values = line.split(regex).map(val => val.trim().replace(/^"|"$/g, ''));\
+                return headers.reduce((obj, header, index) => \{\
+                    if (header) obj[header] = values[index] || '';\
+                    return obj;\
+                \}, \{\});\
+            \});\
+\
+            return rawData.filter(row => \{\
+                const rowStr = Object.values(row).join(' ').toLowerCase();\
+                if (rowStr.includes('total') || rowStr.includes('\uc0\u32317 \u35336 ')) return false; \
+                return Object.keys(row).length > 1; \
+            \});\
+        \};\
+\
+        // \uc0\u20849 \u29992 \u27396 \u20301 \u23450 \u32681 \
+        const colKeys = \{\
+            campaign: ['Campaign', '\uc0\u34892 \u37559 \u27963 \u21205 ', 'Campaign Name'],\
+            date: ['Day', 'Date', 'Time', '\uc0\u22825 \u25976 ', '\u26085 \u26399 '],\
+            adSet: ['Ad group', 'Ad Group', '\uc0\u24291 \u21578 \u32068 \u21512 ', 'Ad Set'],\
+            keyword: ['Search keyword', 'Keyword', '\uc0\u38364 \u37749 \u23383 ', '\u25628 \u23563 \u38364 \u37749 \u23383 '],\
+            adTitle: ['Headline', '\uc0\u24291 \u21578 \u27161 \u38988 ', '\u27161 \u38988 ', 'Ad name'],\
+            adDesc: ['Description', '\uc0\u35498 \u26126 ', '\u24291 \u21578 \u35498 \u26126 ', '\u20839 \u23481 '],\
+            spend: ['Cost', '\uc0\u33457 \u36027 ', 'Spend', 'Amount', '\u36027 \u29992 '], \
+            imp: ['Impr.', 'Impressions', '\uc0\u26333 \u20809 ', 'Impression'],\
+            clicks: ['Clicks', '\uc0\u40670 \u25802 '],\
+        \};\
+\
+        const calculateMetrics = (dataset) => \{\
+            const keys = \{\
+                spend: colKeys.spend, \
+                imp: colKeys.imp,\
+                clicks: colKeys.clicks,\
+                views: ['Views', '\uc0\u24433 \u29255 \u25773 \u25918 ', 'Video Plays'], \
+                reach: ['Reach', '\uc0\u35320 \u21450 '],\
+            \};\
+\
+            let totalSpend = 0, totalImp = 0, totalClicks = 0, totalViews = 0, totalReach = 0;\
+\
+            dataset.forEach(row => \{\
+                totalSpend += cleanNumber(getValue(row, keys.spend, true));\
+                totalImp += cleanNumber(getValue(row, keys.imp, true));\
+                totalClicks += cleanNumber(getValue(row, keys.clicks, true));\
+                totalViews += cleanNumber(getValue(row, keys.views, true));\
+                totalReach += cleanNumber(getValue(row, keys.reach, true));\
+            \});\
+\
+            const ctr = totalImp > 0 ? (totalClicks / totalImp) * 100 : 0;\
+            const vtr = totalImp > 0 ? (totalViews / totalImp) * 100 : 0;\
+            const cpc = totalClicks > 0 ? totalSpend / totalClicks : 0;\
+            \
+            return \{ spend: totalSpend, impressions: totalImp, clicks: totalClicks, views: totalViews, reach: totalReach, ctr, vtr, cpc \};\
+        \};\
+\
+        const isLikelyKeyword = (str) => \{\
+            if (!str || str === "0") return false;\
+            if (str.length > 50) return false; \
+            if (str.includes("http") || str.includes(".com")) return false;\
+            if ((str.match(/[\uc0\u65292 \u12290 \u65281 \u12300 \u12301 ]/g) || []).length > 2) return false;\
+            return true;\
+        \};\
+\
+        const extractTextFeatures = (texts) => \{\
+            const tokenCounts = \{\};\
+            const stopWords = ['\uc0\u30340 ', '\u20102 ', '\u26159 ', '\u22312 ', '\u26377 ', '\u21644 ', '\u33287 ', '\u25110 ', '\u36889 ', '\u37027 ', '\u23601 ', '\u37117 ', '\u32780 ', '\u21450 ', '\u28858 ', 'http', 'https', 'com', 'www', '|', '-', '\u12304 ', '\u12305 '];\
+            \
+            texts.forEach((\{ text, metrics \}) => \{\
+                if (!text) return;\
+                const tokens = text.split(/[\\s,\uc0\u65292 \u12290 \u65281 !\u65311 ?|/\u12300 \u12301 \u12304 \u12305 ()\u65288 \u65289 ]+/);\
+                \
+                tokens.forEach(token => \{\
+                    if (token.length < 2 || stopWords.includes(token) || !isNaN(token)) return;\
+                    \
+                    if (!tokenCounts[token]) \{\
+                        tokenCounts[token] = \{ count: 0, spend: 0, clicks: 0, imp: 0 \};\
+                    \}\
+                    tokenCounts[token].count += 1;\
+                    tokenCounts[token].spend += metrics.spend;\
+                    tokenCounts[token].clicks += metrics.clicks;\
+                    tokenCounts[token].imp += metrics.impressions;\
+                \});\
+            \});\
+\
+            const tokenPerformance = Object.keys(tokenCounts).map(token => \{\
+                const d = tokenCounts[token];\
+                const ctr = d.imp > 0 ? (d.clicks / d.imp) * 100 : 0;\
+                const cpc = d.clicks > 0 ? d.spend / d.clicks : 0;\
+                return \{ token, ...d, ctr, cpc \};\
+            \});\
+\
+            return tokenPerformance;\
+        \};\
+\
+        // --- Gemini API Call ---\
+        const callGeminiAPI = async (prompt, key) => \{\
+            try \{\
+                if (!key) throw new Error("Missing API Key");\
+                \
+                const response = await fetch(\
+                    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=$\{key\}`,\
+                    \{\
+                        method: 'POST',\
+                        headers: \{\
+                            'Content-Type': 'application/json',\
+                        \},\
+                        body: JSON.stringify(\{\
+                            contents: [\{ parts: [\{ text: prompt \}] \}]\
+                        \})\
+                    \}\
+                );\
+                \
+                if (!response.ok) \{\
+                    const errData = await response.json();\
+                    throw new Error(errData.error?.message || `API Error: $\{response.status\}`);\
+                \}\
+\
+                const data = await response.json();\
+                return data.candidates?.[0]?.content?.parts?.[0]?.text || "\uc0\u28961 \u27861 \u29986 \u29983 \u22238 \u25033 ";\
+            \} catch (error) \{\
+                console.error("Gemini API Error:", error);\
+                throw error;\
+            \}\
+        \};\
+\
+        // --- 4. \uc0\u22294 \u34920 \u22577 \u21578 \u20803 \u20214  ---\
+        const VisualReport = (\{ channels, activeChannelId \}) => \{\
+            // \uc0\u23433 \u20840 \u35299 \u27083 \
+            const RechartsObj = window.Recharts || \{\};\
+            const \{ LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ComposedChart, PieChart, Pie, Cell \} = RechartsObj;\
+            \
+            const [isReady, setIsReady] = useState(false);\
+            useEffect(() => \{\
+                if (window.Recharts && window.Recharts.ComposedChart) \{\
+                    setIsReady(true);\
+                \} else \{\
+                    const check = setInterval(() => \{\
+                        if (window.Recharts && window.Recharts.ComposedChart) \{\
+                            setIsReady(true);\
+                            clearInterval(check);\
+                        \}\
+                    \}, 500);\
+                    return () => clearInterval(check);\
+                \}\
+            \}, []);\
+\
+            // \uc0\u38991 \u33394 \u23450 \u32681  (\u23565 \u27604 \u33394 )\
+            const COLORS = ['#3b82f6', '#ea4335', '#10b981', '#f59e0b']; \
+\
+            // \uc0\u35336 \u31639 \u22294 \u34920 \u25976 \u25818 \
+            const chartData = useMemo(() => \{\
+                const validChannels = channels.filter(ch => ch.data.daily && ch.data.daily.length > 0);\
+                \
+                if (validChannels.length === 0) return \{ daily: [], channelDist: [], detailedInsights: [] \};\
+\
+                // --- 1. \uc0\u27599 \u26085 \u36264 \u21218  (\u36328 \u28192 \u36947 \u21512 \u20341 ) ---\
+                const dateMap = \{\};\
+                \
+                validChannels.forEach((ch, idx) => \{\
+                    ch.data.daily.forEach(row => \{\
+                        const dStr = getValue(row, colKeys.date);\
+                        const d = parseDate(dStr);\
+                        if (!d) return;\
+                        const dateKey = d.toISOString().split('T')[0];\
+                        \
+                        if (!dateMap[dateKey]) \{\
+                            dateMap[dateKey] = \{ \
+                                date: dateKey, \
+                                shortDate: `$\{d.getMonth()+1\}/$\{d.getDate()\}`\
+                            \};\
+                        \}\
+                        \
+                        // \uc0\u32047 \u31309 \u35442 \u28192 \u36947 \u30340 \u25976 \u25818 \
+                        const spend = cleanNumber(getValue(row, colKeys.spend, true));\
+                        const clicks = cleanNumber(getValue(row, colKeys.clicks, true));\
+                        const imp = cleanNumber(getValue(row, colKeys.imp, true));\
+                        \
+                        // \uc0\u20786 \u23384 \u20491 \u21029 \u28192 \u36947 \u25976 \u25818  (\u29992 \u26044 \u22810 \u32218 \u22294 /\u22534 \u30090 \u22294 )\
+                        const chKey = ch.name; // \uc0\u25110  ch.id\
+                        if (!dateMap[dateKey][`$\{chKey\}_spend`]) dateMap[dateKey][`$\{chKey\}_spend`] = 0;\
+                        if (!dateMap[dateKey][`$\{chKey\}_clicks`]) dateMap[dateKey][`$\{chKey\}_clicks`] = 0;\
+                        if (!dateMap[dateKey][`$\{chKey\}_imp`]) dateMap[dateKey][`$\{chKey\}_imp`] = 0;\
+\
+                        dateMap[dateKey][`$\{chKey\}_spend`] += spend;\
+                        dateMap[dateKey][`$\{chKey\}_clicks`] += clicks;\
+                        dateMap[dateKey][`$\{chKey\}_imp`] += imp;\
+                    \});\
+                \});\
+\
+                const dailyTrend = Object.values(dateMap)\
+                    .sort((a, b) => new Date(a.date) - new Date(b.date))\
+                    .map(d => \{\
+                        // \uc0\u35336 \u31639 \u20491 \u21029  CTR\
+                        validChannels.forEach(ch => \{\
+                            const chKey = ch.name;\
+                            const clicks = d[`$\{chKey\}_clicks`] || 0;\
+                            const imp = d[`$\{chKey\}_imp`] || 0;\
+                            d[`$\{chKey\}_ctr`] = imp > 0 ? parseFloat(((clicks / imp) * 100).toFixed(2)) : 0;\
+                        \});\
+                        return d;\
+                    \});\
+\
+                // --- 2. \uc0\u28192 \u36947 \u20308 \u27604  (Pie Chart) ---\
+                const channelDist = validChannels.map(ch => \{\
+                    const totalSpend = ch.data.daily.reduce((sum, row) => sum + cleanNumber(getValue(row, colKeys.spend, true)), 0);\
+                    return \{ name: ch.name, value: Math.round(totalSpend) \};\
+                \}).filter(d => d.value > 0);\
+\
+                // --- 3. \uc0\u35443 \u32048 \u27934 \u23519  (Granular Insights) ---\
+                // \uc0\u28858 \u27599 \u20491 \u28192 \u36947 \u20998 \u21029 \u35336 \u31639 \u20854 \u12300 \u32032 \u26448 \u12301 \u25110 \u12300 \u38364 \u37749 \u23383 \u12301 \u30340 \u34920 \u29694 \
+                const detailedInsights = validChannels.map(ch => \{\
+                    const isGoogle = ch.name.toLowerCase().includes('google');\
+                    let groupType = isGoogle ? '\uc0\u38364 \u37749 \u23383  (Keyword)' : '\u32032 \u26448 /\u24291 \u21578  (Ad)';\
+                    let dataMap = \{\};\
+\
+                    ch.data.daily.forEach(row => \{\
+                        let name = "Unknown";\
+                        if (isGoogle) \{\
+                             name = getValue(row, colKeys.keyword); // \uc0\u20778 \u20808 \u25214 \u38364 \u37749 \u23383 \
+                             if (name === "0" || !name) \{\
+                                 name = getValue(row, colKeys.adSet); // \uc0\u20854 \u27425 \u25214 \u32676 \u32068 \
+                                 groupType = '\uc0\u24291 \u21578 \u32676 \u32068  (Ad Group)';\
+                             \}\
+                        \} else \{\
+                             name = getValue(row, colKeys.adTitle); // \uc0\u20778 \u20808 \u25214 \u24291 \u21578 \u27161 \u38988 /\u21517 \u31281 \
+                             if (name === "0" || !name) \{\
+                                 name = getValue(row, colKeys.adSet); // \uc0\u20854 \u27425 \u25214 \u24291 \u21578 \u32068 \
+                                 groupType = '\uc0\u24291 \u21578 \u32068  (Ad Set)';\
+                             \}\
+                        \}\
+                        \
+                        // \uc0\u26368 \u32066  fallback\
+                        if (name === "0" || !name) \{\
+                            name = getValue(row, colKeys.campaign);\
+                            groupType = '\uc0\u34892 \u37559 \u27963 \u21205  (Campaign)';\
+                        \}\
+                        \
+                        // \uc0\u31777 \u21934 \u21517 \u31281 \u28165 \u29702 \
+                        if (name.includes('id:')) name = name.split('id:')[0];\
+\
+                        if (!dataMap[name]) dataMap[name] = \{ name, spend: 0, clicks: 0, imp: 0 \};\
+                        dataMap[name].spend += cleanNumber(getValue(row, colKeys.spend, true));\
+                        dataMap[name].clicks += cleanNumber(getValue(row, colKeys.clicks, true));\
+                        dataMap[name].imp += cleanNumber(getValue(row, colKeys.imp, true));\
+                    \});\
+\
+                    const topList = Object.values(dataMap)\
+                        .filter(d => d.spend > 0)\
+                        .sort((a, b) => b.spend - a.spend)\
+                        .slice(0, 5) // \uc0\u21462  Top 5\
+                        .map(d => (\{\
+                            ...d,\
+                            spend: Math.round(d.spend),\
+                            ctr: d.imp > 0 ? parseFloat(((d.clicks / d.imp) * 100).toFixed(2)) : 0\
+                        \}));\
+\
+                    return \{\
+                        channelId: ch.id,\
+                        channelName: ch.name,\
+                        groupType,\
+                        data: topList\
+                    \};\
+                \});\
+\
+                return \{ daily: dailyTrend, channelDist, validChannels, detailedInsights \};\
+            \}, [channels, activeChannelId]);\
+\
+            if (!isReady) return <div className="text-center p-10 text-slate-500">\uc0\u36617 \u20837 \u22294 \u34920 \u27169 \u32068 \u20013 ...</div>;\
+\
+            if (chartData.daily.length === 0) \{\
+                return (\
+                    <div className="flex flex-col items-center justify-center h-full text-slate-400">\
+                        <BarChart2 size=\{48\} className="mb-2 opacity-50"/>\
+                        <p>\uc0\u35531 \u20808 \u19978 \u20659  Daily \u22577 \u34920 \u20197 \u29983 \u25104 \u22294 \u34920 </p>\
+                    </div>\
+                );\
+            \}\
+\
+            // \uc0\u21028 \u26039 \u26159 \u21542 \u28858 \u22810 \u28192 \u36947 \u27169 \u24335 \
+            const isMultiChannel = chartData.validChannels.length > 1;\
+\
+            return (\
+                <div className="space-y-6 animate-in fade-in duration-500">\
+                    \
+                    \{/* 1. \uc0\u27599 \u26085 \u36264 \u21218 \u22294  (\u21205 \u24907 \u36969 \u25033 \u21934 /\u22810 \u28192 \u36947 ) */\}\
+                    <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">\
+                        <h3 className="font-bold text-slate-700 mb-2 flex items-center gap-2">\
+                            <TrendingUp size=\{18\} className="text-blue-500"/> \
+                            \{isMultiChannel ? "\uc0\u20840 \u28192 \u36947 \u33457 \u36027 \u33287  CTR \u36264 \u21218 \u23565 \u27604 " : "\u27599 \u26085 \u33457 \u36027 \u33287  CTR \u36264 \u21218 "\}\
+                        </h3>\
+                        <p className="text-xs text-slate-400 mb-4">\uc0\u26609 \u29376 \u22294 \u65306 \u33457 \u36027  ($) \u65372  \u25240 \u32218 \u22294 \u65306 CTR (%)</p>\
+                        <div className="h-[320px] w-full">\
+                            <ResponsiveContainer width="100%" height="100%">\
+                                <ComposedChart data=\{chartData.daily\}>\
+                                    <CartesianGrid strokeDasharray="3 3" vertical=\{false\} stroke="#f1f5f9" />\
+                                    <XAxis dataKey="shortDate" axisLine=\{false\} tickLine=\{false\} tick=\{\{fill: '#64748b', fontSize: 12\}\} dy=\{10\} />\
+                                    <YAxis yAxisId="left" orientation="left" axisLine=\{false\} tickLine=\{false\} tick=\{\{fill: '#64748b', fontSize: 12\}\} label=\{\{ value: '\uc0\u33457 \u36027  ($)', angle: -90, position: 'insideLeft', fill: '#cbd5e1' \}\} />\
+                                    <YAxis yAxisId="right" orientation="right" axisLine=\{false\} tickLine=\{false\} tick=\{\{fill: '#64748b', fontSize: 12\}\} unit="%" />\
+                                    <Tooltip contentStyle=\{\{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' \}\} />\
+                                    <Legend wrapperStyle=\{\{ paddingTop: '20px' \}\} />\
+                                    \
+                                    \{/* \uc0\u21205 \u24907 \u28210 \u26579  Bar \u21644  Line */\}\
+                                    \{chartData.validChannels.map((ch, idx) => (\
+                                        <Bar \
+                                            key=\{`bar-$\{ch.name\}`\}\
+                                            yAxisId="left" \
+                                            dataKey=\{`$\{ch.name\}_spend`\} \
+                                            name=\{`$\{ch.name\} \uc0\u33457 \u36027 `\} \
+                                            fill=\{COLORS[idx % COLORS.length]\} \
+                                            stackId="a" // \uc0\u22534 \u30090 \u39023 \u31034 \u65292 \u23637 \u29694 \u32317 \u37327 \
+                                            radius=\{isMultiChannel ? [0,0,0,0] : [4,4,0,0]\}\
+                                            barSize=\{30\}\
+                                        />\
+                                    ))\}\
+\
+                                    \{chartData.validChannels.map((ch, idx) => (\
+                                        <Line \
+                                            key=\{`line-$\{ch.name\}`\}\
+                                            yAxisId="right" \
+                                            type="monotone" \
+                                            dataKey=\{`$\{ch.name\}_ctr`\} \
+                                            name=\{`$\{ch.name\} CTR`\} \
+                                            stroke=\{COLORS[idx % COLORS.length]\} \
+                                            strokeWidth=\{3\} \
+                                            dot=\{\{r: 3\}\} \
+                                        />\
+                                    ))\}\
+                                </ComposedChart>\
+                            </ResponsiveContainer>\
+                        </div>\
+                    </div>\
+\
+                    \{/* 2. \uc0\u28192 \u36947 \u20308 \u27604  (\u20677 \u22810 \u28192 \u36947 \u26178 \u39023 \u31034 ) */\}\
+                    \{isMultiChannel && (\
+                        <div className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex flex-col">\
+                            <h3 className="font-bold text-slate-700 mb-4 flex items-center gap-2">\
+                                <PieChartIcon size=\{18\} className="text-green-500"/> \uc0\u28192 \u36947 \u33457 \u36027 \u20308 \u27604 \
+                            </h3>\
+                            \{/* \uc0\u20462 \u27491 \u65306 \u23559  flex-1 min-h-[250px] \u25913 \u28858 \u26126 \u30906 \u30340  h-[300px]\u65292 \u30906 \u20445 \u22294 \u34920 \u33021 \u21462 \u24471 \u27491 \u30906 \u39640 \u24230  */\}\
+                            <div className="h-[300px] w-full">\
+                                <ResponsiveContainer width="100%" height="100%">\
+                                    <PieChart>\
+                                        <Pie\
+                                            data=\{chartData.channelDist\}\
+                                            cx="50%"\
+                                            cy="50%"\
+                                            innerRadius=\{60\}\
+                                            outerRadius=\{80\}\
+                                            paddingAngle=\{5\}\
+                                            dataKey="value"\
+                                            label=\{(\{name, percent\}) => `$\{name\} $\{(percent * 100).toFixed(0)\}%`\}\
+                                        >\
+                                            \{chartData.channelDist.map((entry, index) => (\
+                                                <Cell key=\{`cell-$\{index\}`\} fill=\{COLORS[index % COLORS.length]\} />\
+                                            ))\}\
+                                        </Pie>\
+                                        <Tooltip contentStyle=\{\{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' \}\} />\
+                                        <Legend layout="vertical" verticalAlign="middle" align="right" />\
+                                    </PieChart>\
+                                </ResponsiveContainer>\
+                            </div>\
+                        </div>\
+                    )\}\
+\
+                    \{/* 3. \uc0\u21508 \u28192 \u36947 \u32048 \u37096 \u27934 \u23519  (\u33258 \u21205 \u26681 \u25818 \u28192 \u36947 \u39006 \u22411 \u39023 \u31034  \u32032 \u26448 /\u38364 \u37749 \u23383 ) */\}\
+                    <div className="space-y-4">\
+                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2 pl-1">\
+                            <Zap size=\{20\} className="text-yellow-500"/> \uc0\u21508 \u28192 \u36947 \u32048 \u37096 \u25104 \u25928  (Deep Dive)\
+                        </h3>\
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">\
+                            \{chartData.detailedInsights.map((insight, idx) => (\
+                                <div key=\{insight.channelId\} className="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">\
+                                    <div className="flex justify-between items-center mb-4">\
+                                        <h3 className="font-bold text-slate-700 flex items-center gap-2">\
+                                            <span className=\{`w-2 h-6 rounded-sm $\{idx === 0 ? 'bg-blue-500' : (idx === 1 ? 'bg-red-500' : 'bg-green-500')\}`\}></span>\
+                                            \{insight.channelName\}\
+                                        </h3>\
+                                        <span className="text-xs px-2 py-1 bg-slate-100 rounded text-slate-500 font-mono">\{insight.groupType\}</span>\
+                                    </div>\
+                                    \
+                                    \{insight.data.length > 0 ? (\
+                                        <div className="h-[250px] w-full">\
+                                            <ResponsiveContainer width="100%" height="100%">\
+                                                <ComposedChart layout="vertical" data=\{insight.data\} margin=\{\{ left: 10, right: 10 \}\}>\
+                                                    <CartesianGrid strokeDasharray="3 3" horizontal=\{true\} vertical=\{false\} stroke="#f1f5f9" />\
+                                                    <XAxis type="number" xAxisId="spend" hide />\
+                                                    <XAxis type="number" xAxisId="ctr" orientation="top" hide />\
+                                                    <YAxis dataKey="name" type="category" width=\{90\} tick=\{\{fill: '#475569', fontSize: 11\}\} tickFormatter=\{(val) => val.length > 10 ? val.substring(0, 10) + '...' : val\} />\
+                                                    <Tooltip cursor=\{\{fill: '#f8fafc'\}\} contentStyle=\{\{ backgroundColor: '#fff', borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' \}\} />\
+                                                    <Legend />\
+                                                    <Bar xAxisId="spend" dataKey="spend" name="\uc0\u33457 \u36027  ($)" fill="#8b5cf6" radius=\{[0, 4, 4, 0]\} barSize=\{12\} />\
+                                                    <Line xAxisId="ctr" type="monotone" dataKey="ctr" name="CTR (%)" stroke="#f59e0b" strokeWidth=\{2\} dot=\{\{r: 3\}\} />\
+                                                </ComposedChart>\
+                                            </ResponsiveContainer>\
+                                        </div>\
+                                    ) : (\
+                                        <div className="h-[250px] flex items-center justify-center text-slate-300 text-sm">\
+                                            \uc0\u28961 \u32048 \u37096 \u25976 \u25818 \
+                                        </div>\
+                                    )\}\
+                                </div>\
+                            ))\}\
+                        </div>\
+                    </div>\
+                </div>\
+            );\
+        \};\
+\
+        // --- 5. \uc0\u20027 \u25033 \u29992 \u31243 \u24335  (AdsReportGenerator) ---\
+        function AdsReportGenerator() \{\
+            const [channels, setChannels] = useState([\
+                \{ \
+                    id: 'default-fb', \
+                    name: 'Facebook', \
+                    files: \{ daily: null, audience: null \},\
+                    data: \{ daily: [], audience: [] \}\
+                \},\
+                \{ \
+                    id: 'default-google', \
+                    name: 'Google \uc0\u25628 \u23563 \u24291 \u21578 ', \
+                    files: \{ daily: null, audience: null \},\
+                    data: \{ daily: [], audience: [] \}\
+                \}\
+            ]);\
+            \
+            const [activeChannelId, setActiveChannelId] = useState('default-fb');\
+            const [isGenerating, setIsGenerating] = useState(false);\
+            const [isAiLoading, setIsAiLoading] = useState(false);\
+            \
+            // State \uc0\u20998 \u38626 \
+            const [standardReport, setStandardReport] = useState("");\
+            const [aiReport, setAiReport] = useState("");\
+            \
+            // Benchmarks (\uc0\u38928 \u35373 \u36617 \u20837 )\
+            const [benchmarks, setBenchmarks] = useState(DEFAULT_BENCHMARKS);\
+            const [showAdmin, setShowAdmin] = useState(false); // \uc0\u25511 \u21046  Admin Modal\
+            const [adminJsonText, setAdminJsonText] = useState(JSON.stringify(DEFAULT_BENCHMARKS, null, 2));\
+            \
+            // User API Key\
+            const [userApiKey, setUserApiKey] = useState(() => \{\
+                return localStorage.getItem('gemini_api_key') || '';\
+            \});\
+            const [showQuickKeyInput, setShowQuickKeyInput] = useState(false);\
+            const keyInputRef = useRef(null); // Ref for quick input section\
+\
+            // Chat State\
+            const [chatInput, setChatInput] = useState("");\
+            const [chatMessages, setChatMessages] = useState([]);\
+            const [isChatLoading, setIsChatLoading] = useState(false);\
+            const chatEndRef = useRef(null);\
+\
+            const [clientName, setClientName] = useState("[\uc0\u25910 \u20214 \u20154 ]");\
+            const [projectGoals, setProjectGoals] = useState(\{ ctr: 1.5 \});\
+            const [newChannelName, setNewChannelName] = useState("");\
+            const [showAddModal, setShowAddModal] = useState(false);\
+            \
+            const [viewMode, setViewMode] = useState('report'); \
+\
+            const activeChannel = channels.find(c => c.id === activeChannelId) || channels[0];\
+\
+            // Scroll to bottom of chat\
+            useEffect(() => \{\
+                chatEndRef.current?.scrollIntoView(\{ behavior: 'smooth' \});\
+            \}, [chatMessages]);\
+\
+            // Handlers\
+            const addChannel = (name) => \{\
+                const newId = `ch-$\{Date.now()\}`;\
+                setChannels([...channels, \{\
+                    id: newId,\
+                    name: name,\
+                    files: \{ daily: null, audience: null \},\
+                    data: \{ daily: [], audience: [] \}\
+                \}]);\
+                setActiveChannelId(newId);\
+            \};\
+\
+            const removeChannel = (id) => \{\
+                if (channels.length === 1) \{\
+                    alert("\uc0\u33267 \u23569 \u38656 \u35201 \u20445 \u30041 \u19968 \u20491 \u28192 \u36947 \u65281 ");\
+                    return;\
+                \}\
+                const newChannels = channels.filter(c => c.id !== id);\
+                setChannels(newChannels);\
+                setActiveChannelId(newChannels[0].id);\
+            \};\
+\
+            const handleAddChannel = () => \{\
+                if (newChannelName.trim()) \{\
+                    addChannel(newChannelName);\
+                    setNewChannelName("");\
+                    setShowAddModal(false);\
+                \}\
+            \};\
+\
+            const updateChannelData = (channelId, fileType, fileName, parsedData) => \{\
+                setChannels(prevChannels => prevChannels.map(ch => \{\
+                    if (ch.id === channelId) \{\
+                        return \{\
+                            ...ch,\
+                            files: \{ ...ch.files, [fileType]: fileName \},\
+                            data: \{ ...ch.data, [fileType]: parsedData \}\
+                        \};\
+                    \}\
+                    return ch;\
+                \}));\
+            \};\
+\
+            const handleFileUpload = (event, type) => \{\
+                const file = event.target.files[0];\
+                if (!file) return;\
+\
+                const reader = new FileReader();\
+                reader.onload = (e) => \{\
+                    try \{\
+                        let content = e.target.result;\
+                        if (content.includes('')) \{\
+                            console.warn("Detected potential encoding issue.");\
+                        \}\
+                        \
+                        const parsed = parseCSV(content);\
+                        updateChannelData(activeChannelId, type, file.name, parsed);\
+                    \} catch (err) \{\
+                        alert("\uc0\u35712 \u21462 \u22833 \u25943 \u65292 \u35531 \u30906 \u35469 \u19978 \u20659 \u30340 \u26159  CSV \u26684 \u24335 \u12290 ");\
+                    \}\
+                \};\
+                reader.readAsText(file); \
+                event.target.value = '';\
+            \};\
+\
+            // Admin: Save Benchmarks & API Key\
+            const handleSaveSettings = () => \{\
+                try \{\
+                    // Save Benchmarks\
+                    const parsed = JSON.parse(adminJsonText);\
+                    setBenchmarks(parsed);\
+                    \
+                    // Save API Key\
+                    localStorage.setItem('gemini_api_key', userApiKey);\
+                    \
+                    setShowAdmin(false);\
+                    alert("\uc0\u35373 \u23450 \u24050 \u26356 \u26032 \u65281 (API Key \u24050 \u20786 \u23384 \u33267 \u28687 \u35261 \u22120 )");\
+                \} catch (e) \{\
+                    alert("JSON \uc0\u26684 \u24335 \u37679 \u35492 \u65292 \u35531 \u27298 \u26597 \u24460 \u20877 \u20786 \u23384 \u12290 ");\
+                \}\
+            \};\
+\
+            // Helper to get benchmark for a channel\
+            const getBenchmarkForChannel = (channelName) => \{\
+                const lowerName = channelName.toLowerCase();\
+                if (lowerName.includes('facebook') || lowerName.includes('meta') || lowerName.includes('fb') || lowerName.includes('ig')) \{\
+                    return benchmarks.meta;\
+                \}\
+                if (lowerName.includes('gdn') || lowerName.includes('display')) \{\
+                    return benchmarks.google_display;\
+                \}\
+                if (lowerName.includes('youtube') || lowerName.includes('video') || lowerName.includes('yt')) \{\
+                    return benchmarks.google_video;\
+                \}\
+                if (lowerName.includes('line')) \{\
+                    return benchmarks.line;\
+                \}\
+                if (lowerName.includes('dsp')) \{\
+                    return benchmarks.dsp;\
+                \}\
+                return benchmarks.other;\
+            \};\
+\
+            // Gemini Insight Generation (AI Report Only)\
+            const generateAiInsights = async () => \{\
+                // Check API Key\
+                const apiKeyToUse = userApiKey || apiKey; // Prefer user key, fallback to env key (if any)\
+                \
+                if (!apiKeyToUse) \{\
+                    setShowQuickKeyInput(true); // \uc0\u30452 \u25509 \u39023 \u31034 \u36664 \u20837 \u26694 \
+                    // Add immediate visual feedback: Scroll to input and focus\
+                    setTimeout(() => \{\
+                        keyInputRef.current?.scrollIntoView(\{ behavior: 'smooth', block: 'center' \});\
+                        document.getElementById('quick-api-input')?.focus();\
+                    \}, 100);\
+                    return;\
+                \}\
+\
+                const hasData = channels.some(ch => ch.data.daily.length > 0);\
+                if (!hasData) \{\
+                    alert("\uc0\u35531 \u20808 \u19978 \u20659 \u22577 \u34920 \u25976 \u25818 \u65292 Gemini \u25165 \u33021 \u36914 \u34892 \u20998 \u26512 \u65281 ");\
+                    return;\
+                \}\
+\
+                setIsAiLoading(true);\
+                setViewMode('report');\
+\
+                // 1. \uc0\u28310 \u20633 \u25976 \u25818 \u25688 \u35201 \
+                const dataSummary = channels.filter(ch => ch.data.daily.length > 0).map(ch => \{\
+                    const metrics = calculateMetrics(ch.data.daily);\
+                    const sortedRows = [...ch.data.daily].sort((a,b) => cleanNumber(getValue(b, colKeys.spend, true)) - cleanNumber(getValue(a, colKeys.spend, true))).slice(0, 10);\
+                    \
+                    const items = sortedRows.map(row => \{\
+                        const name = getValue(row, colKeys.keyword) !== "0" ? getValue(row, colKeys.keyword) : (getValue(row, colKeys.adTitle) !== "0" ? getValue(row, colKeys.adTitle) : getValue(row, colKeys.adSet));\
+                        return \{\
+                            name: name.substring(0, 50), \
+                            spend: cleanNumber(getValue(row, colKeys.spend, true)),\
+                            ctr: (cleanNumber(getValue(row, colKeys.clicks, true)) / cleanNumber(getValue(row, colKeys.imp, true)) * 100).toFixed(2) + '%'\
+                        \};\
+                    \});\
+\
+                    // \uc0\u21462 \u24471 \u35442 \u28192 \u36947 \u30340  Benchmark\
+                    const benchmarkData = getBenchmarkForChannel(ch.name);\
+\
+                    return \{\
+                        channel: ch.name,\
+                        total_spend: Math.round(metrics.spend),\
+                        overall_ctr: metrics.ctr.toFixed(2) + '%',\
+                        benchmark_reference: benchmarkData, // \uc0\u20659 \u36865  Benchmark \u32102  AI\
+                        top_spending_items: items\
+                    \};\
+                \});\
+\
+                const prompt = `\
+                    Role: You are a Senior Performance Marketing Consultant.\
+                    Task: Based on the provided ad performance data below, write a professional "AI Deep Dive Analysis" section in Traditional Chinese (Taiwan).\
+                    \
+                    **Crucial**: Compare the actual performance against the provided 'benchmark_reference' for each channel. If the CTR/CPC is better than benchmark, praise it. If worse, identify it as a problem.\
+\
+                    Data Summary: $\{JSON.stringify(dataSummary)\}\
+                    \
+                    Please provide:\
+                    1. \uc0\u55357 \u56522  **Executive Summary**: 2-3 sentences summarizing the overall health of the accounts. Mentino if they beat the benchmarks.\
+                    2. \uc0\u55357 \u56481  **Root Cause Analysis**: Why are certain channels performing well or poorly? (Compare vs Benchmark)\
+                    3. \uc0\u55357 \u56960  **Strategic Recommendations**: 3 specific, actionable bullet points for next week's optimization.\
+                    4. \uc0\u10024  **Creative Optimization**: If you see low CTR items (vs benchmark), suggest 3 rewritten ad copy angles or keyword directions.\
+                    \
+                    Output Format: Markdown style. Keep it professional, encouraging, and data-driven.\
+                `;\
+\
+                try \{\
+                    const aiResponse = await callGeminiAPI(prompt, apiKeyToUse);\
+                    setAiReport(aiResponse);\
+                \} catch (error) \{\
+                    alert(`AI \uc0\u20998 \u26512 \u29983 \u25104 \u22833 \u25943 : $\{error.message\}`);\
+                \} finally \{\
+                    setIsAiLoading(false);\
+                \}\
+            \};\
+\
+            // Standard Report Generation\
+            const generateFinding = () => \{\
+                setIsGenerating(true);\
+                setViewMode('report'); \
+                \
+                setTimeout(() => \{\
+                    try \{\
+                        let fullReport = `Hi $\{clientName\}\\n`;\
+                        const today = new Date();\
+                        const todayStr = today.toISOString().split('T')[0];\
+                        fullReport += `\uc0\u38468 \u20214 \u25552 \u20379 \u26412 \u36913 \u21508 \u28192 \u36947 \u23560 \u26696 \u25104 \u25928 \u65292 \u25976 \u25818 \u25130 \u27490 \u33267  $\{todayStr\}\u12290 \\n\\n`;\
+\
+                        let hasData = false;\
+\
+                        channels.forEach(ch => \{\
+                            const \{ daily \} = ch.data;\
+                            if (daily.length === 0) return;\
+                            hasData = true;\
+\
+                            const dates = daily\
+                                .map(r => parseDate(getValue(r, colKeys.date)))\
+                                .filter(d => d !== null)\
+                                .sort((a, b) => a - b);\
+                            \
+                            const latestDate = dates.length > 0 ? dates[dates.length - 1] : today;\
+                            const latestDateStr = latestDate.toISOString().split('T')[0];\
+                            const sevenDaysAgo = new Date(latestDate); sevenDaysAgo.setDate(latestDate.getDate() - 7);\
+                            const fourteenDaysAgo = new Date(latestDate); fourteenDaysAgo.setDate(latestDate.getDate() - 14);\
+\
+                            const thisWeekRows = daily.filter(r => \{\
+                                const d = parseDate(getValue(r, colKeys.date));\
+                                return d && d > sevenDaysAgo && d <= latestDate;\
+                            \});\
+                            const lastWeekRows = daily.filter(r => \{\
+                                const d = parseDate(getValue(r, colKeys.date));\
+                                return d && d > fourteenDaysAgo && d <= sevenDaysAgo;\
+                            \});\
+\
+                            const finalThisWeekRows = thisWeekRows.length > 0 ? thisWeekRows : daily;\
+                            const isFallbackDate = thisWeekRows.length === 0;\
+\
+                            const cumulativeMetrics = calculateMetrics(daily);\
+                            const thisWeekMetrics = calculateMetrics(finalThisWeekRows);\
+                            const lastWeekMetrics = calculateMetrics(lastWeekRows);\
+                            const ctrGrowth = calculateGrowth(thisWeekMetrics.ctr, lastWeekMetrics.ctr);\
+\
+                            fullReport += `\uc0\u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \\n`;\
+                            fullReport += `\uc0\u12304 $\{ch.name\} \u28192 \u36947 \u25237 \u36958 \u25104 \u25928 \u12305 \\n`;\
+                            fullReport += `\uc0\u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \u9473 \\n\\n`;\
+\
+                            const formatDateStr = (d) => d.toISOString().split('T')[0].replace(/-/g, '/');\
+                            fullReport += `\uc0\u55357 \u56522  \u32047 \u31309 \u25104 \u25928 \u33287 \u26412 \u36913 \u27010 \u27841 \\n`;\
+                            fullReport += `\uc0\u25130 \u33267 \u30446 \u21069 \u65292 $\{ch.name\} \u23560 \u26696 \u32047 \u31309 \u26333 \u20809  $\{(cumulativeMetrics.impressions/10000).toFixed(1)\} \u33836 \u27425 \u65292 \u32047 \u31309 \u33457 \u36027  $$\{Math.round(cumulativeMetrics.spend).toLocaleString()\} USD\u12290 \\n`;\
+                            \
+                            if (isFallbackDate) \{\
+                                fullReport += `\uc0\u26412 \u36913  (\u25976 \u25818 \u26085 \u26399 \u26410 \u35443 \u65292 \u39023 \u31034 \u25972 \u39636 \u24179 \u22343 ) \u34920 \u29694 \u31337 \u20581 \u65292 \u32317 \u33457 \u36027  $$\{Math.round(thisWeekMetrics.spend).toLocaleString()\}\u12290 `;\
+                            \} else \{\
+                                fullReport += `\uc0\u26412 \u36913  ($\{formatDateStr(sevenDaysAgo)\}~$\{latestDateStr\}) \u34920 \u29694 $\{ctrGrowth >= 0 ? '\u31337 \u20581 ' : '\u31245 \u26377 \u27874 \u21205 '\}\u65292 \u21934 \u36913 \u33457 \u36027  $$\{Math.round(thisWeekMetrics.spend).toLocaleString()\}\u12290 `;\
+                            \}\
+                            \
+                            fullReport += `\uc0\u25972 \u39636  CTR $\{thisWeekMetrics.ctr.toFixed(2)\}% ($\{!isFallbackDate ? (ctrGrowth >= 0 ? '\u55357 \u56634 \u25552 \u21319 ' : '\u55357 \u56635 \u24494 \u24133 \u19979 \u28369 ') + ' ' + Math.abs(ctrGrowth).toFixed(1) + '%' : '\u24179 \u22343 \u27700 \u28310 '\})\u65292 `;\
+                            fullReport += thisWeekMetrics.ctr > projectGoals.ctr ? `\uc0\u20778 \u26044 \u30446 \u27161 \u65292 \u27969 \u37327 \u21697 \u36074 \u31337 \u23450 \u12290 \\n\\n` : `\u30053 \u20302 \u26044 \u24179 \u22343 \u65292 \u38656 \u25345 \u32396 \u20778 \u21270 \u12290 \\n\\n`;\
+\
+                            let analysisType = 'creative';\
+                            let analysisLabel = '\uc0\u32032 \u26448 ';\
+                            \
+                            if (daily.length > 0) \{\
+                                const firstKey = getValue(daily[0], colKeys.keyword);\
+                                if (firstKey !== "0" && isLikelyKeyword(firstKey)) \{\
+                                    analysisType = 'keyword';\
+                                    analysisLabel = '\uc0\u38364 \u37749 \u23383 ';\
+                                \} else if (getValue(daily[0], colKeys.adSet) !== "0" && ch.name.toLowerCase().includes('google')) \{\
+                                    analysisType = 'adgroup';\
+                                    analysisLabel = '\uc0\u24291 \u21578 \u32676 \u32068 /\u25991 \u26696 ';\
+                                \}\
+                            \}\
+\
+                            fullReport += `\uc0\u55357 \u56589  $\{analysisLabel\}\u25104 \u25928 \u28145 \u24230 \u21078 \u26512 \\n`;\
+                            \
+                            const items = \{\};\
+                            finalThisWeekRows.forEach(row => \{\
+                                let itemName = "";\
+                                if (analysisType === 'keyword') itemName = getValue(row, colKeys.keyword);\
+                                else if (analysisType === 'adgroup') itemName = getValue(row, colKeys.adSet);\
+                                else \{\
+                                    const rawName = getValue(row, colKeys.campaign);\
+                                    itemName = rawName.split('_')[2] || rawName;\
+                                \}\
+\
+                                if (itemName && itemName !== "0" && isLikelyKeyword(itemName)) \{\
+                                    if (!items[itemName]) items[itemName] = \{ rows: [], lastWeekRows: [] \};\
+                                    items[itemName].rows.push(row);\
+                                \}\
+                            \});\
+\
+                            lastWeekRows.forEach(row => \{\
+                                let itemName = "";\
+                                if (analysisType === 'keyword') itemName = getValue(row, colKeys.keyword);\
+                                else if (analysisType === 'adgroup') itemName = getValue(row, colKeys.adSet);\
+                                else \{\
+                                    const rawName = getValue(row, colKeys.campaign);\
+                                    itemName = rawName.split('_')[2] || rawName;\
+                                \}\
+                                if (items[itemName]) items[itemName].lastWeekRows.push(row);\
+                            \});\
+\
+                            const sortedItems = Object.keys(items).sort((a, b) => \{\
+                                const mA = calculateMetrics(items[a].rows);\
+                                const mB = calculateMetrics(items[b].rows);\
+                                return mB.spend - mA.spend;\
+                            \}).slice(0, 5);\
+\
+                            if (sortedItems.length === 0) fullReport += `(\uc0\u25976 \u25818 \u19981 \u36275 \u25110 \u26684 \u24335 \u28961 \u27861 \u35672 \u21029 )\\n`;\
+\
+                            sortedItems.forEach(name => \{\
+                                const m = calculateMetrics(items[name].rows);\
+                                const lm = calculateMetrics(items[name].lastWeekRows);\
+                                const itemCtrGrowth = calculateGrowth(m.ctr, lm.ctr);\
+\
+                                fullReport += `\'95 $\{analysisLabel\}\uc0\u12300 $\{name\}\u12301 \u65306 \\n`;\
+                                fullReport += `  CTR $\{m.ctr.toFixed(2)\}% | CPC $$\{m.cpc.toFixed(2)\} | \uc0\u33457 \u36027  $$\{Math.round(m.spend)\}\u12290 \\n`;\
+                                \
+                                let trend = "";\
+                                if (itemCtrGrowth > 5) trend += ` (CTR \uc0\u55357 \u56634 $\{itemCtrGrowth.toFixed(1)\}%)`;\
+                                else if (itemCtrGrowth < -5) trend += ` (CTR \uc0\u55357 \u56635 $\{Math.abs(itemCtrGrowth).toFixed(1)\}%)`;\
+                                \
+                                if (m.ctr > projectGoals.ctr && m.cpc < 20) \{\
+                                    fullReport += `  \uc0\u55357 \u56393  \u55356 \u57119  \u39640 \u28507 \u21147 \u26143 \u32026 \u65306 \u34920 \u29694 \u20778 \u30064 $\{trend\}\u65292 \u25628 \u23563 \u24847 \u22294 \u31934 \u28310 \u65292 \u24314 \u35696 \u21487 \u22039 \u35430 \u25844 \u22823 \u27604 \u23565 \u25110 \u25552 \u39640 \u20986 \u20729 \u12290 \\n`;\
+                                \} else if (m.spend > 100 && m.ctr < 1) \{\
+                                    fullReport += `  \uc0\u55357 \u56393  \u9888 \u65039  \u38656 \u38364 \u27880 \u35686 \u31034 \u65306 \u33457 \u36027 \u36611 \u39640 \u20294  CTR \u20559 \u20302 $\{trend\}\u65292 \u24314 \u35696 \u27298 \u35222 \u24291 \u21578 \u38364 \u32879 \u24615 \u25110 \u25490 \u38500 \u28961 \u25928 \u25628 \u23563 \u23383 \u35422 \u12290 \\n`;\
+                                \} else \{\
+                                    fullReport += `  \uc0\u55357 \u56393  \u34920 \u29694 \u25345 \u24179 $\{trend\}\u65292 \u24314 \u35696 \u25345 \u32396 \u35264 \u23519 \u21697 \u36074 \u20998 \u25976 \u35722 \u21270 \u12290 \\n`;\
+                                \}\
+                            \});\
+                            fullReport += `\\n`;\
+\
+                            if (analysisType === 'keyword' || analysisType === 'adgroup') \{\
+                                fullReport += `\uc0\u55357 \u56541  \u39640 \u25104 \u25928 \u25991 \u26696 \u29305 \u24501 \u35264 \u23519  (Token Analysis)\\n`;\
+                                const adTexts = [];\
+                                finalThisWeekRows.forEach(row => \{\
+                                    const titles = getAllTextValues(row, colKeys.adTitle);\
+                                    const descs = getAllTextValues(row, colKeys.adDesc);\
+                                    const adText = `$\{titles\} $\{descs\}`.trim();\
+                                    \
+                                    if (adText.length > 2) \{\
+                                        const rowMetrics = calculateMetrics([row]);\
+                                        adTexts.push(\{ text: adText, metrics: rowMetrics \});\
+                                    \}\
+                                \});\
+\
+                                const tokens = extractTextFeatures(adTexts);\
+                                const topTokens = tokens\
+                                    .filter(t => t.imp > 100)\
+                                    .sort((a, b) => b.ctr - a.ctr)\
+                                    .slice(0, 3);\
+\
+                                if (topTokens.length > 0) \{\
+                                    topTokens.forEach(t => \{\
+                                        fullReport += `\'95 \uc0\u21253 \u21547 \u12300 $\{t.token\}\u12301 \u20043 \u25991 \u26696 \u65306 \u24179 \u22343  CTR \u36948  $\{t.ctr.toFixed(2)\}% (\u39640 \u26044 \u24179 \u22343 )\u12290 \\n`;\
+                                    \});\
+                                    fullReport += `\uc0\u55357 \u56393  \u25976 \u25818 \u39023 \u31034 \u65292 \u25991 \u26696 \u20013 \u24375 \u35519 \u12304 $\{topTokens.map(t => t.token).join('\u12289 ')\}\u12305 \u31561 \u29305 \u24501 \u26368 \u33021 \u21560 \u24341 \u29992 \u25142 \u40670 \u25802 \u65292 \u24314 \u35696 \u24460 \u32396 \u25991 \u26696 \u25776 \u23531 \u21487 \u22810 \u21152 \u21033 \u29992 \u12290 \\n\\n`;\
+                                \} else \{\
+                                    fullReport += `(\uc0\u25991 \u26696 \u25976 \u25818 \u27171 \u26412 \u19981 \u36275 \u65292 \u28961 \u27861 \u25552 \u21462 \u39023 \u33879 \u29305 \u24501 )\\n\\n`;\
+                                \}\
+                            \} else \{\
+                                fullReport += `\\n`; \
+                            \}\
+\
+                            fullReport += `\uc0\u55357 \u56960  \u19979 \u36913 \u20778 \u21270 \u31574 \u30053 \\n`;\
+                            if (thisWeekMetrics.ctr < projectGoals.ctr) \{\
+                                fullReport += `1. \uc0\u37341 \u23565  CTR \u36611 \u20302 \u20043 \u23383 \u32068 \u65292 \u20778 \u20808 \u27298 \u35222 \u12300 \u25628 \u23563 \u23383 \u35422 \u22577 \u21578  (SQR)\u12301 \u65292 \u25490 \u38500 \u19981 \u30456 \u38364 \u27969 \u37327 \u12290 \\n`;\
+                            \} else \{\
+                                fullReport += `1. \uc0\u25104 \u25928 \u31337 \u23450 \u65292 \u24314 \u35696 \u37341 \u23565 \u34920 \u29694 \u22909 \u30340 $\{analysisLabel\}\u65292 \u22039 \u35430 \u25366 \u25496 \u26356 \u22810 \u38263 \u23614 \u23383 \u35422 \u20197 \u25844 \u22823 \u27969 \u37327 \u12290 \\n`;\
+                            \}\
+                            fullReport += `2. \uc0\u25991 \u26696 \u20778 \u21270 \u26041 \u21521 \u65306 \u24314 \u35696 \u28204 \u35430 \u23559 \u12300 $\{analysisType === 'keyword' ? '\u39640 \u40670 \u25802 \u38364 \u37749 \u23383 ' : '\u39640 \u25104 \u25928 \u29305 \u24501 '\}\u12301 \u32622 \u20837 \u27161 \u38988 \u19968  (Headline 1)\u65292 \u20197 \u25552 \u21319 \u24291 \u21578 \u38364 \u32879 \u24615 \u12290 \\n\\n`;\
+                        \});\
+\
+                        if (!hasData) fullReport += "\uc0\u23578 \u26410 \u19978 \u20659 \u25976 \u25818 \u12290 \\n";\
+                        fullReport += `\uc0\u20197 \u19978 \u20998 \u26512 \u20379 \u21443 \u32771 \u65292 \u35613 \u35613 \u65281 `;\
+\
+                        setStandardReport(fullReport);\
+                        setIsGenerating(false);\
+\
+                    \} catch (error) \{\
+                        console.error(error);\
+                        alert("\uc0\u29983 \u25104 \u22833 \u25943 ");\
+                        setIsGenerating(false);\
+                    \}\
+                \}, 1200);\
+            \};\
+\
+            const handleCopy = (text) => \{\
+                const textarea = document.createElement('textarea');\
+                textarea.value = text;\
+                document.body.appendChild(textarea);\
+                textarea.select();\
+                try \{\
+                    document.execCommand('copy');\
+                    alert("\uc0\u24050 \u35079 \u35069 \u22577 \u21578 \u20839 \u23481 \u65281 ");\
+                \} catch (err) \{\
+                    console.error('\uc0\u28961 \u27861 \u35079 \u35069 ', err);\
+                    alert("\uc0\u35079 \u35069 \u22833 \u25943 \u65292 \u35531 \u25163 \u21205 \u36984 \u21462 \u25991 \u23383 \u35079 \u35069 \u12290 ");\
+                \}\
+                document.body.removeChild(textarea);\
+            \};\
+\
+            // Chat Functionality\
+            const handleChatSubmit = async (e) => \{\
+                e.preventDefault();\
+                if (!chatInput.trim() || isChatLoading) return;\
+\
+                // Check API Key\
+                const apiKeyToUse = userApiKey || apiKey;\
+                if (!apiKeyToUse) \{\
+                    setShowQuickKeyInput(true);\
+                    setTimeout(() => \{\
+                        keyInputRef.current?.scrollIntoView(\{ behavior: 'smooth', block: 'center' \});\
+                        document.getElementById('quick-api-input')?.focus();\
+                    \}, 100);\
+                    return;\
+                \}\
+\
+                const userMsg = \{ role: 'user', text: chatInput \};\
+                setChatMessages(prev => [...prev, userMsg]);\
+                setChatInput("");\
+                setIsChatLoading(true);\
+\
+                // Build context\
+                const context = `\
+                    You are a helpful data analyst assistant.\
+                    Here is the current "Standard Weekly Report" data:\
+                    $\{standardReport\}\
+\
+                    Here is the current "AI Deep Dive Analysis" data:\
+                    $\{aiReport\}\
+\
+                    Here are the internal company BENCHMARKS (Reference):\
+                    $\{JSON.stringify(benchmarks)\}\
+\
+                    User Question: $\{chatInput\}\
+                    \
+                    Answer concisely in Traditional Chinese (Taiwan). Focus on data insights and use benchmarks to justify your answer if applicable.\
+                `;\
+\
+                try \{\
+                    const response = await callGeminiAPI(context, apiKeyToUse);\
+                    setChatMessages(prev => [...prev, \{ role: 'model', text: response \}]);\
+                \} catch (error) \{\
+                    setChatMessages(prev => [...prev, \{ role: 'model', text: "\uc0\u25265 \u27465 \u65292 \u25105 \u30446 \u21069 \u28961 \u27861 \u22238 \u25033 \u65292 \u35531 \u27298 \u26597  API Key \u26159 \u21542 \u27491 \u30906 \u25110 \u32178 \u36335 \u29376 \u24907 \u12290 " \}]);\
+                \} finally \{\
+                    setIsChatLoading(false);\
+                \}\
+            \};\
+\
+            return (\
+                <div className="p-6 font-sans text-slate-800">\
+                    <div className="max-w-6xl mx-auto space-y-6">\
+                        <div className="flex justify-between items-center bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative">\
+                            <div>\
+                                <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2">\
+                                    <TrendingUp className="text-blue-600" />\
+                                    \uc0\u23560 \u26989 \u24291 \u21578 \u36913 \u22577 \u29983 \u25104 \u22120  PRO\
+                                </h1>\
+                                <p className="text-slate-500 mt-1 flex items-center gap-1 text-sm">\
+                                    <Layers size=\{14\} /> \uc0\u25903 \u25588  FB/Google \u38364 \u37749 \u23383 \u35299 \u26512 \u65372 \u33258 \u21205 \u21028 \u35712 \u27396 \u20301 \u65372 \u35222 \u35258 \u21270 \u22294 \u34920 \
+                                </p>\
+                            </div>\
+                            \{/* Admin Settings Button (Subtle) */\}\
+                            <button onClick=\{() => setShowAdmin(true)\} className="absolute top-4 right-4 p-2 text-slate-300 hover:text-slate-500 transition-colors">\
+                                <Settings size=\{20\} />\
+                            </button>\
+                        </div>\
+\
+                        \{/* Admin Modal */\}\
+                        \{showAdmin && (\
+                            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center backdrop-blur-sm modal-enter-active">\
+                                <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">\
+                                    <div className="p-4 border-b border-slate-100 flex justify-between items-center bg-slate-50">\
+                                        <h3 className="font-bold text-slate-700 flex items-center gap-2">\
+                                            <Settings size=\{18\} className="text-slate-500"/> \uc0\u24460 \u21488 \u35373 \u23450  (Admin Settings)\
+                                        </h3>\
+                                        <button onClick=\{() => setShowAdmin(false)\} className="p-1 hover:bg-slate-200 rounded-full"><X size=\{20\}/></button>\
+                                    </div>\
+                                    <div className="p-6 flex-1 overflow-auto space-y-6">\
+                                        \
+                                        \{/* API Key Section */\}\
+                                        <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">\
+                                            <h4 className="font-bold text-purple-700 mb-2 flex items-center gap-2">\
+                                                <Key size=\{16\}/> Google Gemini API Key\
+                                            </h4>\
+                                            <p className="text-xs text-purple-600 mb-3">\
+                                                \uc0\u33509 \u35201 \u20351 \u29992  AI \u22577 \u21578 \u33287 \u21839 \u31572 \u21151 \u33021 \u65292 \u35531 \u36664 \u20837 \u24744 \u30340  API Key\u12290 \
+                                                (\uc0\u24744 \u30340  Key \u20677 \u26371 \u20786 \u23384 \u22312 \u27492 \u28687 \u35261 \u22120 \u20013 \u65292 \u19981 \u26371 \u19978 \u20659 \u33267 \u20219 \u20309 \u20282 \u26381 \u22120 )\
+                                                <a href="https://aistudio.google.com/app/apikey" target="_blank" className="underline ml-1">\uc0\u21462 \u24471 \u20813 \u36027  Key</a>\
+                                            </p>\
+                                            <input \
+                                                type="password" \
+                                                className="w-full px-3 py-2 border border-purple-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"\
+                                                placeholder="\uc0\u36664 \u20837  AIza \u38283 \u38957 \u30340 \u37329 \u38000 ..."\
+                                                value=\{userApiKey\}\
+                                                onChange=\{(e) => setUserApiKey(e.target.value)\}\
+                                            />\
+                                        </div>\
+\
+                                        \{/* Benchmarks Section */\}\
+                                        <div>\
+                                            <h4 className="font-bold text-slate-700 mb-2 flex items-center gap-2">\
+                                                <BarChart2 size=\{16\}/> \uc0\u20844 \u21496 \u22522 \u28310 \u25976 \u25818  (Benchmarks)\
+                                            </h4>\
+                                            <p className="text-sm text-slate-500 mb-2">\
+                                                \uc0\u27492 \u34389 \u36039 \u26009 \u23559 \u20316 \u28858  AI \u20998 \u26512 \u26178 \u30340 \u21443 \u32771 \u22522 \u28310 \u12290 \u24744 \u21487 \u20197 \u30452 \u25509 \u32232 \u36655 \u19979 \u26041 \u30340  JSON \u26684 \u24335 \u20358 \u26356 \u26032 \u22522 \u28310 \u20540 \u12290 \
+                                            </p>\
+                                            <textarea \
+                                                className="w-full h-[250px] p-4 font-mono text-sm bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"\
+                                                value=\{adminJsonText\}\
+                                                onChange=\{(e) => setAdminJsonText(e.target.value)\}\
+                                            />\
+                                        </div>\
+                                    </div>\
+                                    <div className="p-4 border-t border-slate-100 flex justify-end gap-2 bg-white">\
+                                        <Button variant="ghost" onClick=\{() => setShowAdmin(false)\}>\uc0\u21462 \u28040 </Button>\
+                                        <Button onClick=\{handleSaveSettings\}>\uc0\u20786 \u23384 \u35373 \u23450 </Button>\
+                                    </div>\
+                                </div>\
+                            </div>\
+                        )\}\
+\
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">\
+                            \{/* \uc0\u24038 \u20596 \u65306 \u25511 \u21046 \u21488  */\}\
+                            <div className="lg:col-span-5 space-y-6">\
+                                <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">\
+                                    \{channels.map(ch => (\
+                                        <button\
+                                            key=\{ch.id\}\
+                                            onClick=\{() => setActiveChannelId(ch.id)\}\
+                                            className=\{`flex items-center gap-2 px-4 py-2 rounded-t-lg font-medium text-sm transition-all border-b-2 $\{activeChannelId === ch.id ? 'bg-white text-blue-600 border-blue-600 shadow-sm' : 'bg-slate-100 text-slate-500 border-transparent hover:bg-slate-200'\}`\}\
+                                        >\
+                                            \{ch.name\}\
+                                            \{channels.length > 1 && (\
+                                                <span onClick=\{(e) => \{ e.stopPropagation(); removeChannel(ch.id); \}\} className="p-0.5 hover:bg-red-100 hover:text-red-500 rounded-full cursor-pointer ml-1"><X size=\{12\} /></span>\
+                                            )\}\
+                                        </button>\
+                                    ))\}\
+                                    \{!showAddModal ? (\
+                                        <button onClick=\{() => setShowAddModal(true)\} className="flex items-center gap-1 px-3 py-2 rounded-lg text-sm text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors"><Plus size=\{16\} /> \uc0\u26032 \u22686 \u28192 \u36947 </button>\
+                                    ) : (\
+                                        <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-300 animate-in fade-in zoom-in duration-200">\
+                                            <input autoFocus type="text" className="w-24 text-sm px-2 py-1 outline-none" placeholder="Google..." value=\{newChannelName\} onChange=\{(e) => setNewChannelName(e.target.value)\} onKeyDown=\{(e) => e.key === 'Enter' && handleAddChannel()\} />\
+                                            <button onClick=\{handleAddChannel\} className="p-1 bg-blue-100 text-blue-600 rounded hover:bg-blue-200"><Check size=\{14\}/></button>\
+                                            <button onClick=\{() => setShowAddModal(false)\} className="p-1 hover:bg-slate-100 rounded"><X size=\{14\}/></button>\
+                                        </div>\
+                                    )\}\
+                                </div>\
+\
+                                <Card className="p-6 border-t-4 border-t-blue-500">\
+                                    <div className="flex justify-between items-center mb-6">\
+                                        <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">\{activeChannel.name\} <span className="text-slate-400 text-sm font-normal">\uc0\u25976 \u25818 \u19978 \u20659 \u21312 </span></h2>\
+                                    </div>\
+                                    <div className="grid grid-cols-1 gap-4">\
+                                        <div className="border border-dashed border-slate-300 rounded-xl p-6 flex flex-col items-center justify-center text-center hover:bg-blue-50/50 transition-colors bg-slate-50">\
+                                            <div className="p-3 bg-blue-100 text-blue-600 rounded-full mb-3"><FileText size=\{24\} /></div>\
+                                            <h3 className="font-semibold text-slate-700">1. Daily \uc0\u22577 \u34920  (\u24517 \u35201 )</h3>\
+                                            <p className="text-xs text-slate-500 mb-3">\uc0\u25903 \u25588  Google \u38364 \u37749 \u23383 /\u24291 \u21578 \u32676 \u32068 \u27396 \u20301 </p>\
+                                            <label className="cursor-pointer w-full">\
+                                                <span className=\{`block w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors $\{activeChannel.files.daily ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-white border border-slate-300 hover:border-blue-400'\}`\}>\
+                                                    \{activeChannel.files.daily ? <span className="flex items-center justify-center gap-1"><Check size=\{14\} /> \uc0\u24050 \u19978 \u20659 </span> : '\u19978 \u20659  .csv'\}\
+                                                </span>\
+                                                <input type="file" accept=".csv" className="hidden" onChange=\{(e) => handleFileUpload(e, 'daily')\} key=\{`daily-$\{activeChannelId\}`\} />\
+                                            </label>\
+                                        </div>\
+                                    </div>\
+                                    \{activeChannel.data.daily.length > 0 && <div className="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-100"><span className="text-sm font-medium text-slate-600">\uc0\u24050 \u35712 \u21462  \{activeChannel.data.daily.length\} \u31558 \u36039 \u26009 </span></div>\}\
+                                </Card>\
+\
+                                <Card className="p-5 flex items-center justify-between">\
+                                    <div className="flex items-center gap-3">\
+                                         <div className="p-2 bg-yellow-100 text-yellow-600 rounded-lg"><Lightbulb size=\{20\} /></div>\
+                                         <div><h3 className="font-bold text-slate-800 text-sm">\uc0\u20998 \u26512 \u35373 \u23450 </h3><p className="text-xs text-slate-500">CTR \u21450 \u26684 \u27161 \u28310 </p></div>\
+                                    </div>\
+                                    <div className="flex items-center gap-2">\
+                                         <input type="number" step="0.1" value=\{projectGoals.ctr\} onChange=\{(e) => setProjectGoals(\{...projectGoals, ctr: parseFloat(e.target.value)\})\} className="w-16 px-2 py-1 border rounded text-sm text-center" />\
+                                         <span className="text-sm text-slate-600">%</span>\
+                                    </div>\
+                                </Card>\
+\
+                                <Card className="p-6 bg-slate-800 text-white shadow-xl shadow-slate-200 space-y-4">\
+                                    <div className="flex justify-between items-start">\
+                                        <div><h3 className="font-bold text-lg text-white">\uc0\u29983 \u25104 \u35443 \u32048 \u36913 \u22577 </h3><p className="text-slate-400 text-xs mt-1">AI \u37007 \u36655 \u35299 \u26512  + \u36264 \u21218 \u22294 \u34920 </p></div>\
+                                        <div className="bg-slate-700 px-3 py-1 rounded-full text-xs font-mono">Ch: \{channels.length\}</div>\
+                                    </div>\
+                                    <Button onClick=\{generateFinding\} disabled=\{isGenerating\} className="w-full py-3 bg-blue-500 hover:bg-blue-400 border-none text-base font-bold shadow-lg shadow-blue-900/20">\{isGenerating ? '\uc0\u20998 \u26512 \u25976 \u25818 \u20013 ...' : '\u29983 \u25104 \u27161 \u28310 \u25976 \u25818 \u22577 \u21578 '\}</Button>\
+                                    \
+                                    <div className="pt-2 border-t border-slate-700">\
+                                        <Button variant="ai" onClick=\{generateAiInsights\} disabled=\{isAiLoading || isGenerating\} className="w-full py-3 text-base font-bold">\
+                                            \{isAiLoading ? 'Gemini \uc0\u24605 \u32771 \u20013 ...' : (showQuickKeyInput ? '\u11015 \u65039  \u35531 \u26044 \u19979 \u26041 \u36664 \u20837  API Key' : '\u10024  \u29983 \u25104  AI \u28145 \u24230 \u27934 \u23519 \u22577 \u21578 ')\}\
+                                        </Button>\
+                                        \
+                                        \{!showQuickKeyInput && !userApiKey && <p className="text-center text-xs text-slate-400 mt-2">\uc0\u9888 \u65039  \u38656 \u20808 \u30003 \u35531  Google AI API Key (\u20813 \u36027 )</p>\}\
+\
+                                        \{/* \uc0\u24555 \u36895 \u36664 \u20837 \u38754 \u26495  */\}\
+                                        \{showQuickKeyInput && (\
+                                            <div ref=\{keyInputRef\} className="mt-3 bg-slate-700/50 p-3 rounded-lg border border-slate-600 animate-in fade-in slide-in-from-top-2 highlight-box">\
+                                                <p className="text-sm text-white mb-2 font-bold flex items-center gap-1"><Key size=\{14\}/> \uc0\u35531 \u36664 \u20837  API Key \u20197 \u32380 \u32396 \u65306 </p>\
+                                                <input \
+                                                    id="quick-api-input"\
+                                                    type="password" \
+                                                    className="w-full px-3 py-2 mb-2 bg-slate-800 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all placeholder-slate-500"\
+                                                    placeholder="\uc0\u36028 \u19978 \u24744 \u30340  API Key (AIza...)"\
+                                                    value=\{userApiKey\}\
+                                                    onChange=\{(e) => setUserApiKey(e.target.value)\}\
+                                                />\
+                                                <div className="flex gap-2">\
+                                                    <a \
+                                                        href="https://aistudio.google.com/app/apikey" \
+                                                        target="_blank" \
+                                                        className="flex-1 py-2 text-center bg-slate-600 hover:bg-slate-500 text-white text-xs rounded transition-colors flex items-center justify-center gap-1"\
+                                                    >\
+                                                        <ExternalLink size=\{12\}/> \uc0\u30003 \u35531  API Key\
+                                                    </a>\
+                                                    <button \
+                                                        onClick=\{() => \{\
+                                                            localStorage.setItem('gemini_api_key', userApiKey);\
+                                                            setShowQuickKeyInput(false);\
+                                                            generateAiInsights(); // \uc0\u20786 \u23384 \u24460 \u33258 \u21205 \u37325 \u35430 \
+                                                        \}\}\
+                                                        className="flex-1 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs rounded font-bold transition-colors shadow-lg shadow-purple-900/20"\
+                                                    >\
+                                                        \uc0\u20786 \u23384 \u20006 \u38283 \u22987 \
+                                                    </button>\
+                                                </div>\
+                                                \
+                                                \{/* \uc0\u32020  CSS \u32362 \u35069 \u30340 \u27493 \u39519 \u25945 \u23416  (\u21462 \u20195 \u22294 \u29255 ) */\}\
+                                                <div className="mt-4 p-4 bg-slate-800/80 rounded border border-slate-600/50">\
+                                                    <p className="text-xs text-indigo-300 mb-3 flex items-center gap-1 font-bold">\
+                                                        <Lightbulb size=\{12\}/> 4 \uc0\u27493 \u39519 \u24555 \u36895 \u30003 \u35531  (\u28961 \u38656 \u20449 \u29992 \u21345 )\u65306 \
+                                                    </p>\
+                                                    <div className="space-y-3">\
+                                                        <div className="flex items-start gap-3">\
+                                                            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">1</div>\
+                                                            <div className="text-xs text-slate-300">\
+                                                                <span className="font-bold text-white">\uc0\u30331 \u20837  Google AI Studio</span><br/>\
+                                                                \uc0\u40670 \u25802 \u19978 \u26041 \u12300 \u30003 \u35531  API Key\u12301 \u25353 \u37397 \u20006 \u30331 \u20837 \u24115 \u34399 \u12290 \
+                                                            </div>\
+                                                        </div>\
+                                                        <div className="flex items-start gap-3">\
+                                                            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">2</div>\
+                                                            <div className="text-xs text-slate-300">\
+                                                                <span className="font-bold text-white">\uc0\u24314 \u31435 \u23560 \u26696 </span><br/>\
+                                                                \uc0\u40670 \u25802 \u24038 \u19978 \u35282  <span className="px-1 py-0.5 bg-blue-600 rounded text-[10px] text-white">Get API key</span>\u65292 \u28982 \u24460 \u36984 \u25799  <span className="text-blue-300">Create API key in new project</span>\u12290 \
+                                                            </div>\
+                                                        </div>\
+                                                        <div className="flex items-start gap-3">\
+                                                            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">3</div>\
+                                                            <div className="text-xs text-slate-300">\
+                                                                <span className="font-bold text-white">\uc0\u21462 \u24471 \u37329 \u38000 </span><br/>\
+                                                                \uc0\u31995 \u32113 \u26371 \u33258 \u21205 \u29986 \u29983 \u19968 \u20018 \u37329 \u38000 \u12290 \
+                                                            </div>\
+                                                        </div>\
+                                                        <div className="flex items-start gap-3">\
+                                                            <div className="w-5 h-5 rounded-full bg-slate-700 flex items-center justify-center text-[10px] font-bold text-white shrink-0 mt-0.5">4</div>\
+                                                            <div className="text-xs text-slate-300">\
+                                                                <span className="font-bold text-white">\uc0\u35079 \u35069 \u36028 \u19978 </span><br/>\
+                                                                \uc0\u35079 \u35069  <code>AIza...</code> \u38283 \u38957 \u23383 \u20018 \u65292 \u36028 \u22238 \u19978 \u26041 \u27396 \u20301 \u12290 \
+                                                            </div>\
+                                                        </div>\
+                                                    </div>\
+                                                </div>\
+                                            </div>\
+                                        )\}\
+                                        \
+                                        \{!showQuickKeyInput && <p className="text-center text-xs text-slate-500 mt-1">Powered by Google Gemini 2.5</p>\}\
+                                    </div>\
+                                </Card>\
+                            </div>\
+\
+                            \{/* \uc0\u21491 \u20596 \u65306 \u22577 \u21578 \u33287 \u22294 \u34920 \u21312  (\u20308 \u27604 \u36611 \u22823 ) */\}\
+                            <div className="lg:col-span-7 flex flex-col gap-6">\
+                                <Card className="flex-1 min-h-[700px] flex flex-col relative bg-white border-2 border-slate-100 overflow-hidden">\
+                                    \{/* Tab \uc0\u20999 \u25563  */\}\
+                                    <div className="flex border-b border-slate-200 bg-slate-50">\
+                                        <button \
+                                            onClick=\{() => setViewMode('report')\}\
+                                            className=\{`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors $\{viewMode === 'report' ? 'bg-white text-blue-600 border-t-2 border-t-blue-500' : 'text-slate-500 hover:bg-slate-100'\}`\}\
+                                        >\
+                                            <FileText size=\{16\}/> \uc0\u25991 \u23383 \u36913 \u22577 \u33287 \u27934 \u23519 \
+                                        </button>\
+                                        <button \
+                                            onClick=\{() => setViewMode('visual')\}\
+                                            className=\{`flex-1 py-3 text-sm font-bold flex items-center justify-center gap-2 transition-colors $\{viewMode === 'visual' ? 'bg-white text-purple-600 border-t-2 border-t-purple-500' : 'text-slate-500 hover:bg-slate-100'\}`\}\
+                                        >\
+                                            <BarChart2 size=\{16\}/> \uc0\u35222 \u35258 \u21270 \u22294 \u34920 \
+                                        </button>\
+                                    </div>\
+\
+                                    \{/* \uc0\u20839 \u23481 \u21312  */\}\
+                                    <div className="flex-1 relative overflow-hidden flex flex-col bg-slate-50">\
+                                        \{viewMode === 'report' ? (\
+                                            <div className="absolute inset-0 overflow-y-auto p-4 space-y-4">\
+                                                \{/* 1. \uc0\u27161 \u28310 \u25976 \u25818 \u36913 \u22577 \u21312 \u22602  */\}\
+                                                <div className="bg-white rounded-lg border border-slate-200 shadow-sm p-4 relative group">\
+                                                    <div className="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">\
+                                                        <h3 className="font-bold text-slate-700 flex items-center gap-2">\
+                                                            <FileText size=\{18\} className="text-blue-500"/> \uc0\u27161 \u28310 \u25976 \u25818 \u36913 \u22577 \
+                                                        </h3>\
+                                                        <button onClick=\{() => handleCopy(standardReport)\} className="text-xs text-slate-400 hover:text-blue-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><Copy size=\{12\}/> \uc0\u35079 \u35069 </button>\
+                                                    </div>\
+                                                    <textarea \
+                                                        className="w-full h-[300px] resize-y focus:outline-none font-mono text-sm leading-relaxed text-slate-700 bg-transparent" \
+                                                        value=\{standardReport\} \
+                                                        onChange=\{(e) => setStandardReport(e.target.value)\} \
+                                                        placeholder="\uc0\u35531 \u40670 \u25802 \u24038 \u20596 \u12300 \u29983 \u25104 \u27161 \u28310 \u25976 \u25818 \u22577 \u21578 \u12301 ..." \
+                                                    />\
+                                                </div>\
+\
+                                                \{/* 2. AI \uc0\u28145 \u24230 \u27934 \u23519 \u22577 \u21578 \u21312 \u22602  */\}\
+                                                \{(aiReport || isAiLoading) && (\
+                                                    <div className="bg-white rounded-lg border border-purple-100 shadow-sm p-4 relative group ring-1 ring-purple-100">\
+                                                        <div className="flex justify-between items-center mb-2 border-b border-purple-50 pb-2">\
+                                                            <h3 className="font-bold text-slate-700 flex items-center gap-2">\
+                                                                <Sparkles size=\{18\} className="text-purple-500"/> AI \uc0\u28145 \u24230 \u27934 \u23519 \u22577 \u21578  (Gemini)\
+                                                            </h3>\
+                                                            \{aiReport && <button onClick=\{() => handleCopy(aiReport)\} className="text-xs text-slate-400 hover:text-purple-600 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"><Copy size=\{12\}/> \uc0\u35079 \u35069 </button>\}\
+                                                        </div>\
+                                                        \{isAiLoading ? (\
+                                                            <div className="flex flex-col items-center justify-center h-[150px] text-purple-400 animate-pulse gap-2">\
+                                                                <Sparkles size=\{24\} />\
+                                                                <span className="text-sm">Gemini \uc0\u27491 \u22312 \u20998 \u26512 \u25976 \u25818 \u20013 ...</span>\
+                                                            </div>\
+                                                        ) : (\
+                                                            <textarea \
+                                                                className="w-full h-[300px] resize-y focus:outline-none font-mono text-sm leading-relaxed text-slate-700 bg-transparent" \
+                                                                value=\{aiReport\} \
+                                                                onChange=\{(e) => setAiReport(e.target.value)\} \
+                                                                placeholder="\uc0\u31561 \u24453  AI \u29983 \u25104 ..." \
+                                                            />\
+                                                        )\}\
+                                                    </div>\
+                                                )\}\
+\
+                                                \{/* 3. \uc0\u25345 \u32396 \u33287  AI \u21839 \u31572 \u21312 \u22602  */\}\
+                                                \{(standardReport || aiReport) && (\
+                                                    <div className="bg-white rounded-lg border border-slate-200 shadow-sm flex flex-col h-[400px]">\
+                                                        <div className="p-3 border-b border-slate-100 bg-slate-50/50 rounded-t-lg">\
+                                                            <h3 className="font-bold text-slate-700 flex items-center gap-2 text-sm">\
+                                                                <MessageSquare size=\{16\} className="text-green-500"/> \uc0\u25345 \u32396 \u33287  AI \u21839 \u31572 \
+                                                            </h3>\
+                                                        </div>\
+                                                        \
+                                                        \{/* \uc0\u35338 \u24687 \u21015 \u34920  */\}\
+                                                        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/30">\
+                                                            \{chatMessages.length === 0 && (\
+                                                                <div className="text-center text-slate-400 text-xs mt-10">\
+                                                                    \uc0\u21487 \u20197 \u37341 \u23565 \u19978 \u26041 \u30340 \u22577 \u21578 \u20839 \u23481 \u25552 \u20986 \u21839 \u38988 \u65292 <br/>\u20363 \u22914 \u65306 \u12300 \u28858 \u20160 \u40636  CTR \u19979 \u38477 \u65311 \u12301 \u12289 \u12300 \u32102 \u20986  3 \u20491 \u20778 \u21270 \u24314 \u35696 \u12301 \
+                                                                </div>\
+                                                            )\}\
+                                                            \{chatMessages.map((msg, idx) => (\
+                                                                <div key=\{idx\} className=\{`flex $\{msg.role === 'user' ? 'justify-end' : 'justify-start'\}`\}>\
+                                                                    <div className=\{`max-w-[85%] rounded-lg p-3 text-sm leading-relaxed $\{\
+                                                                        msg.role === 'user' \
+                                                                            ? 'bg-blue-500 text-white rounded-br-none' \
+                                                                            : 'bg-white border border-slate-200 text-slate-700 rounded-bl-none shadow-sm'\
+                                                                    \}`\}>\
+                                                                        \{msg.role === 'model' ? (\
+                                                                            <div className="prose prose-sm max-w-none" dangerouslySetInnerHTML=\{\{ __html: marked.parse(msg.text) \}\} />\
+                                                                        ) : (\
+                                                                            msg.text\
+                                                                        )\}\
+                                                                    </div>\
+                                                                </div>\
+                                                            ))\}\
+                                                            \{isChatLoading && (\
+                                                                <div className="flex justify-start">\
+                                                                    <div className="bg-slate-100 rounded-lg p-3 rounded-bl-none text-slate-400 text-xs flex items-center gap-2">\
+                                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>\
+                                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-100"></span>\
+                                                                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce delay-200"></span>\
+                                                                    </div>\
+                                                                </div>\
+                                                            )\}\
+                                                            <div ref=\{chatEndRef\} />\
+                                                        </div>\
+\
+                                                        \{/* \uc0\u36664 \u20837 \u26694  */\}\
+                                                        <div className="p-3 border-t border-slate-200 bg-white rounded-b-lg">\
+                                                            <form onSubmit=\{handleChatSubmit\} className="flex gap-2">\
+                                                                <input \
+                                                                    type="text" \
+                                                                    value=\{chatInput\}\
+                                                                    onChange=\{(e) => setChatInput(e.target.value)\}\
+                                                                    placeholder="\uc0\u36664 \u20837 \u21839 \u38988 ..."\
+                                                                    className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"\
+                                                                />\
+                                                                <button \
+                                                                    type="submit" \
+                                                                    disabled=\{isChatLoading || !chatInput.trim()\}\
+                                                                    className="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed transition-colors"\
+                                                                >\
+                                                                    <Send size=\{18\} />\
+                                                                </button>\
+                                                            </form>\
+                                                        </div>\
+                                                    </div>\
+                                                )\}\
+                                            </div>\
+                                        ) : (\
+                                            <div className="p-6 h-full bg-slate-50/50 overflow-y-auto">\
+                                                <VisualReport channels=\{channels\} activeChannelId=\{activeChannelId\} />\
+                                            </div>\
+                                        )\}\
+                                    </div>\
+                                </Card>\
+                            </div>\
+                        </div>\
+                    </div>\
+                </div>\
+            );\
+        \}\
+\
+        const root = ReactDOM.createRoot(document.getElementById('root'));\
+        root.render(<AdsReportGenerator />);\
+    </script>\
+</body>\
+</html>}
